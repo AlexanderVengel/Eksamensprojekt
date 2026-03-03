@@ -1,5 +1,6 @@
 import pygame
 import sys
+import pygame as pg
 from movement import Player
 from projectiles import Arrow
 
@@ -14,6 +15,15 @@ clock = pygame.time.Clock() # load tiden
 player = Player(WIDTH // 2, HEIGHT // 2) # sæt player midt i mainwindow
 
 arrows = [] # sæt pilene som en liste
+
+fighter_anim = []
+for i in range(4):
+    img = pg.image.load(f"Images/Fighter_anim{i}.png")
+    fighter_anim.append(img)
+
+frame_counter = 0
+
+
 
 running = True
 while running:
@@ -53,12 +63,21 @@ while running:
     
     screen.fill((255, 255, 255)) # gør vinduet vidt (skal erstattes med billede)
 
+    frame = (frame_counter // 6) % len(fighter_anim)
+
+    img = fighter_anim[frame]
+    x = int(player.position.x - img.get_width() / 2)
+    y = int(player.position.y - img.get_height() / 2)
+
+    screen.blit(img, (x, y))
+
     player.draw(screen) # tegner spilleren på skærmen
 
     for arrow in arrows:
         arrow.draw(screen) # tegner pilene fra listen
 
     pygame.display.flip()
+    frame_counter += 1
 
 pygame.quit()
 sys.exit()
