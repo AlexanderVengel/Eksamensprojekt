@@ -32,6 +32,6 @@ class Player:
         self.position.y = max(0, min(height - self.size, self.position.y))
 
     def draw(self, surface): #tegner objektet
-        pygame.draw.rect(surface, (50, 100, 255),
+      pygame.draw.rect(surface, (50, 100, 255),
                          (self.position.x, self.position.y,
                           self.size, self.size))

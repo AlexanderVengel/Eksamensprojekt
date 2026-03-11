@@ -1,8 +1,11 @@
 import pygame
+pygame.init()
+pygame.font.init()
 import sys
 import pygame as pg
 from movement import Player
 from projectiles import Arrow
+from barrier import Barrier
 
 pygame.init()
 
@@ -15,13 +18,21 @@ clock = pygame.time.Clock() # load tiden
 player = Player(WIDTH // 2, HEIGHT // 2) # sæt player midt i mainwindow
 
 arrows = [] # sæt pilene som en liste
+barriers = []
 
-fighter_anim = []
-for i in range(4):
-    img = pg.image.load(f"Images/Fighter_anim{i}.png")
-    fighter_anim.append(img)
+#fighter_anim = []
+#for i in range(4):
+#    img = pg.image.load(f"Images/Fighter_anim{i}.png")
+#    fighter_anim.append(img)
 
 frame_counter = 0
+
+barrier = Barrier(
+    x=100,
+    y=100,
+    
+)
+barriers.append(barrier)
 
 
 
@@ -44,7 +55,6 @@ while running:
                     player.position.y,
                     speed=12,
                     size=5,
-                    damage=25,
                     target_pos=mouse_pos # laver et objekt fra arrow-klassen og sigter mod musen
                 )
 
@@ -54,30 +64,46 @@ while running:
     player.handle_input()
     player.constrain_to_screen(WIDTH, HEIGHT) # gør at spilleren ikke kan bevæge sig ud af mainwindow
 
-   
     for arrow in arrows[:]:
-        arrow.update(WIDTH, HEIGHT)
-        if not arrow.alive:
-            arrows.remove(arrow) # fjerner pile når de er ude af vinduet
+     arrow.update(WIDTH, HEIGHT)
+
+     for barrier in barriers:
+         if arrow.hitbox.colliderect(barrier.hitbox):
+             barrier.take_damage(arrow.damage)
+             arrow.alive = False
+
+     if not arrow.alive:
+        arrows.remove(arrow)
+     if not barrier.alive:
+        barriers.remove(barrier)
+
+   
 
     
-    screen.fill((255, 255, 255)) # gør vinduet vidt (skal erstattes med billede)
+    screen.fill((255, 255, 255)) # gør vinduet hvidt (skal erstattes med billede)
 
-    frame = (frame_counter // 6) % len(fighter_anim)
+    #frame = (frame_counter // 6) % len(fighter_anim)
 
-    img = fighter_anim[frame]
-    x = int(player.position.x - img.get_width() / 2)
-    y = int(player.position.y - img.get_height() / 2)
+    #img = fighter_anim[frame]
+    #x = int(player.position.x - img.get_width() / 2)
+    #y = int(player.position.y - img.get_height() / 2)
 
-    screen.blit(img, (x, y))
+    #screen.blit(img, (x, y))
 
-    player.draw(screen) # tegner spilleren på skærmen
+    #player.draw(screen) # tegner spilleren på skærmen
 
     for arrow in arrows:
         arrow.draw(screen) # tegner pilene fra listen
 
+    for barrier in barriers:
+        barrier.draw(screen, barrier.font)
+
+    player.draw(screen)
+
     pygame.display.flip()
     frame_counter += 1
+
+   
 
 pygame.quit()
 sys.exit()
