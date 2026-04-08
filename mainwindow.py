@@ -18,7 +18,7 @@ clock = pygame.time.Clock() # load tiden
 player = Player(WIDTH // 2, HEIGHT // 2) # sæt player midt i mainwindow
 
 arrows = [] # sæt pilene som en liste
-barriers = []
+barriers = [] # sæt barriers som liste 
 
 #fighter_anim = []
 #for i in range(4):

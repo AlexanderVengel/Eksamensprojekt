@@ -27,12 +27,13 @@ class Barrier:
 
     def take_damage(self, damage):
         self.health -= damage
-        if self.health <= 0:
+        if self.health <= 0.1:
             self.health = 0
             self.alive = False
 
     def draw(self, screen, font):
         
+
         pygame.draw.rect(screen, (139, 69, 19), self.hitbox)
 
         #health bar
