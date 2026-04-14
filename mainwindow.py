@@ -6,104 +6,134 @@ import pygame as pg
 from movement import Player
 from projectiles import Arrow
 from barrier import Barrier
+from enemy import enemy
 
 pygame.init()
 
-WIDTH, HEIGHT = 1200, 750  # sæt størrelse på mainwindow
+WIDTH, HEIGHT = 1200, 750
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Topdown Shooter")
 
-clock = pygame.time.Clock() # load tiden
+clock = pygame.time.Clock()
 
-player = Player(WIDTH // 2, HEIGHT // 2) # sæt player midt i mainwindow
+player = Player(WIDTH // 2, HEIGHT // 2)
 
-arrows = [] # sæt pilene som en liste
-barriers = [] # sæt barriers som liste 
-
-#fighter_anim = []
-#for i in range(4):
-#    img = pg.image.load(f"Images/Fighter_anim{i}.png")
-#    fighter_anim.append(img)
+arrows = []
+enemy_arrows = []
+barriers = []
+enemies = []
 
 frame_counter = 0
 
-barrier = Barrier(
-    x=100,
-    y=100,
-    
-)
+# barrier
+barrier = Barrier(x=100, y=100)
 barriers.append(barrier)
 
-
+# enemies
+enemy1 = enemy(900, 200)
+enemy2 = enemy(850, 500)
+enemies.append(enemy1)
+enemies.append(enemy2)
 
 running = True
 while running:
-    clock.tick(60) # sæt til 60 ticks i sekundet
+    clock.tick(60)
 
-    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False # gør at programmet kan slukke
+            running = False
 
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE: # starter når man trykker space
-                mouse_pos = pygame.mouse.get_pos() # få lokationen af musen til at sigte pilene
+            if event.key == pygame.K_SPACE:
+                mouse_pos = pygame.mouse.get_pos()
 
-                
-                arrow = Arrow( 
-                    player.position.x,
-                    player.position.y,
+                arrow = Arrow(
+                    player.position.x + player.size / 2,
+                    player.position.y + player.size / 2,
                     speed=12,
                     size=5,
-                    target_pos=mouse_pos # laver et objekt fra arrow-klassen og sigter mod musen
+                    target_pos=mouse_pos
                 )
 
-                arrows.append(arrow) # skubber det nye objekt i listen til pile
+                arrows.append(arrow)
 
-    
     player.handle_input()
-    player.constrain_to_screen(WIDTH, HEIGHT) # gør at spilleren ikke kan bevæge sig ud af mainwindow
+    player.constrain_to_screen(WIDTH, HEIGHT)
 
+    # opdater spillerens pile
     for arrow in arrows[:]:
-     arrow.update(WIDTH, HEIGHT)
+        arrow.update(WIDTH, HEIGHT)
 
-     for barrier in barriers:
-         if arrow.hitbox.colliderect(barrier.hitbox):
-             barrier.take_damage(arrow.damage)
-             arrow.alive = False
+        # pil rammer barriers
+        for barrier in barriers:
+            if arrow.hitbox.colliderect(barrier.hitbox):
+                barrier.take_damage(arrow.damage)
+                arrow.alive = False
 
-     if not arrow.alive:
-        arrows.remove(arrow)
-     if not barrier.alive:
-        barriers.remove(barrier)
+        # pil rammer enemies
+        for enemy in enemies:
+            if arrow.hitbox.colliderect(enemy.hitbox):
+                enemy.take_damage(arrow.damage)
+                arrow.alive = False
 
-   
+        if not arrow.alive and arrow in arrows:
+            arrows.remove(arrow)
 
-    
-    screen.fill((255, 255, 255)) # gør vinduet hvidt (skal erstattes med billede)
+    # fjern døde barriers
+    for barrier in barriers[:]:
+        if not barrier.alive:
+            barriers.remove(barrier)
 
-    #frame = (frame_counter // 6) % len(fighter_anim)
+    # opdater enemies
+    for enemy in enemies[:]:
+        enemy.update(player, barriers, enemy_arrows, WIDTH, HEIGHT)
 
-    #img = fighter_anim[frame]
-    #x = int(player.position.x - img.get_width() / 2)
-    #y = int(player.position.y - img.get_height() / 2)
+        if not enemy.alive:
+            enemies.remove(enemy)
 
-    #screen.blit(img, (x, y))
+    # opdater enemy arrows
+    for enemy_arrow in enemy_arrows[:]:
+        enemy_arrow.update(WIDTH, HEIGHT)
 
-    #player.draw(screen) # tegner spilleren på skærmen
+        # enemy arrow rammer barrier
+        for barrier in barriers:
+            if enemy_arrow.hitbox.colliderect(barrier.hitbox):
+                barrier.take_damage(enemy_arrow.damage)
+                enemy_arrow.alive = False
+
+        # enemy arrow rammer player
+        player_rect = pygame.Rect(
+            player.position.x,
+            player.position.y,
+            player.size,
+            player.size
+        )
+
+        if enemy_arrow.hitbox.colliderect(player_rect):
+            print("Player hit")
+            enemy_arrow.alive = False
+
+        if not enemy_arrow.alive and enemy_arrow in enemy_arrows:
+            enemy_arrows.remove(enemy_arrow)
+
+    screen.fill((255, 255, 255))
 
     for arrow in arrows:
-        arrow.draw(screen) # tegner pilene fra listen
+        arrow.draw(screen)
+
+    for enemy_arrow in enemy_arrows:
+        enemy_arrow.draw(screen)
 
     for barrier in barriers:
         barrier.draw(screen, barrier.font)
+
+    for enemy in enemies:
+        enemy.draw(screen)
 
     player.draw(screen)
 
     pygame.display.flip()
     frame_counter += 1
-
-   
 
 pygame.quit()
 sys.exit()
